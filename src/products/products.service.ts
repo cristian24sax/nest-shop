@@ -59,8 +59,8 @@ export class ProductsService {
     }
   }
   
-  async upload(uploadImage: UploadImageDto) {
-    console.log(uploadImage);
+  async upload(uploadImageDto) {
+    console.log(uploadImageDto);
   }
 
   

@@ -8,15 +8,18 @@ import {
   Delete,
   ParseUUIDPipe,
   Query,
+  Req,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
-
+import { Request } from 'express';
 import { Product } from './entities/product.entity';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PaginationDto } from './../common/dtos/pagination.dto';
-
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Auth, GetUser } from '../auth/decorators';
 import { User } from '../auth/entities/user.entity';
 import { ValidRoles } from '../auth/interfaces';
@@ -46,11 +49,17 @@ export class ProductsController {
   }
 
   @Post('upload')
-  upload(@Body() uploadImageDto: UploadImageDto) {
-    return this.productsService.upload(uploadImageDto);
+  @UseInterceptors(FileInterceptor('img'))
+  async upload(
+    @UploadedFile() img: Express.Multer.File,
+    @Req() request: Request,
+  ) {
+    console.log(img);
+    console.log( request.body.data);
+
+    // return await this.productsService.upload(uploadImageDto);
   }
 
-  
   @Get(':term')
   findOne(@Param('term') term: string) {
     return this.productsService.findOnePlain(term);

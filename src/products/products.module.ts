@@ -8,6 +8,8 @@ import { ProductsService } from './products.service';
 
 import { Product, ProductImage } from './entities';
 import { CategoryModule } from 'src/category/category.module';
+import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
+import { CategoryService } from 'src/category/category.service';
 
 @Module({
   controllers: [ProductsController],
@@ -16,7 +18,8 @@ import { CategoryModule } from 'src/category/category.module';
     TypeOrmModule.forFeature([Product, ProductImage]),
     AuthModule,
     CategoryModule,
+    CloudinaryModule,
   ],
-  exports: [ProductsService, TypeOrmModule,ProductsModule],
+  exports: [ProductsService, TypeOrmModule, ProductsModule],
 })
 export class ProductsModule {}

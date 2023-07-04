@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  Inject,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -9,16 +8,17 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { PaginationDto } from 'src/common/dtos/pagination.dto';
 
-import { validate as isUUID } from 'uuid';
-import { ProductImage, Product } from './entities';
-import { User } from '../auth/entities/user.entity';
 import { Category } from 'src/category/entities/category.entity';
+import { CloudinaryResponse } from 'src/cloudinary/cloudinary-response';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
-import { UploadImageDto } from './dto/UploadImage.dto';
+import { validate as isUUID } from 'uuid';
+import { User } from '../auth/entities/user.entity';
+import { Product, ProductImage } from './entities';
+
 
 @Injectable()
 export class ProductsService {
@@ -33,19 +33,28 @@ export class ProductsService {
 
     @InjectRepository(Category)
     private readonly CategoryRepository: Repository<Category>,
-    // @Inject()
-    // private readonly cloudinaryService : CloudinaryService,
+    private readonly cloudinaryService: CloudinaryService,
     private readonly dataSource: DataSource,
   ) {}
 
-  async create(createProductDto: CreateProductDto, user: User) {
+  async create(
+    createProductDto: CreateProductDto,
+    imgFile: Express.Multer.File,
+    user: User,
+  ) {
     try {
+      let data: CloudinaryResponse,
+        imagesUpload: Array<string> = [];
       const { images = [], category, ...productDetails } = createProductDto;
       const findCategory = await this.findCategory(category);
+      if (imgFile) {
+        data = await this.cloudinaryService.uploadFile(imgFile);
+        imagesUpload = [...images, data.url];
+      }
       const product = this.productRepository.create({
         ...productDetails,
         category: findCategory,
-        images: images.map((image) =>
+        images: imagesUpload.map((image) =>
           this.productImageRepository.create({ url: image }),
         ),
         user,
@@ -53,19 +62,18 @@ export class ProductsService {
 
       await this.productRepository.save(product);
 
-      return { ...product, images };
+      return product;
     } catch (error) {
       this.handleDBExceptions(error);
     }
   }
-  
+
   async upload(uploadImageDto) {
     console.log(uploadImageDto);
   }
 
-  
   async findCategory(id: string): Promise<Category> {
-    let category;
+    let category: Category;
     if (id !== undefined) {
       category = await this.CategoryRepository.findOneBy({
         id_category: id,

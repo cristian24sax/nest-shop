@@ -58,7 +58,9 @@ export class CreateProductDto {
   // tags: string[];
 
   @ApiProperty()
-  @IsString({ each: true })
+  @IsString({
+    each: true,
+  })
   @IsArray()
   @IsOptional()
   images?: string[];

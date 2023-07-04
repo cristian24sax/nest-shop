@@ -39,8 +39,13 @@ export class ProductsController {
   })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 403, description: 'Forbidden. Token related.' })
-  create(@Body() createProductDto: CreateProductDto, @GetUser() user: User) {
-    return this.productsService.create(createProductDto, user);
+  @UseInterceptors(FileInterceptor('imgFile'))
+  create(
+    @Body() createProductDto: CreateProductDto,
+    @UploadedFile() imgFile: Express.Multer.File,
+    @GetUser() user: User,
+  ) {
+    return this.productsService.create(createProductDto, imgFile, user);
   }
 
   @Get()
@@ -52,10 +57,10 @@ export class ProductsController {
   @UseInterceptors(FileInterceptor('img'))
   async upload(
     @UploadedFile() img: Express.Multer.File,
-    @Req() request: Request,
+    @Body() createProductDto: CreateProductDto,
   ) {
     console.log(img);
-    console.log( request.body.data);
+    console.log(createProductDto);
 
     // return await this.productsService.upload(uploadImageDto);
   }
